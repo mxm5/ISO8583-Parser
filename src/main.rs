@@ -85,8 +85,7 @@ fn main() {
             24 => s.process_field(24, 4, ""),
             25 => s.process_field(25, 2, ""),
             35 => {
-                let track2_len: u32 =
-                    u32::from_str_radix(&s.get_slice_until(2), 10).expect("Unable to get the length of track2");
+                let track2_len: u32 = s.get_slice_until(2).parse::<u32>().unwrap();
                 s.process_field(35, track2_len, "Track2");
             }
             41 => s.process_field(41, 16, "Terminal"),
