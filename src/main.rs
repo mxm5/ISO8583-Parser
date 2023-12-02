@@ -41,10 +41,7 @@ fn read_data_from_stdin()-> String {
 }
 
 
-mod tlv_parser;
-
-
-//use crate::tlv::tlv_parser::parse_tlv;
+use emv_tlv_parser::parse_tlv;
 
 fn main() {
     let mut s= read_data_from_stdin();
@@ -86,8 +83,8 @@ fn main() {
                 println!(" Filed55 length: {}", filed55_len);
                 let data_raw = s.get_slice_until(filed55_len as usize);
                 println!("Filed55: {}", data_raw);
-                let data_vec = hex_string_to_bytes(&data_raw);
-                    match tlv_parser::parse_tlv(&data_vec) { 
+                //let data_vec = hex_string_to_bytes(&data_raw);
+                    match parse_tlv(data_raw) { 
                         Ok(tags) => tags.iter().for_each(|tag| println!("{}", tag)), 
                         Err(e) => eprintln!("Error parsing TLV: {}", e) 
                     }

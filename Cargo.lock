@@ -6,6 +6,16 @@ version = 3
 name = "emv_parser"
 version = "0.1.0"
 dependencies = [
+ "emv_tlv_parser",
+ "hex",
+]
+
+[[package]]
+name = "emv_tlv_parser"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d52e0f48b702e41887deefd600636628547f1c403a54f4181ef807579869ff5b"
+dependencies = [
  "hex",
 ]
 
