@@ -1,4 +1,4 @@
-
+use emv_tlv_parser::parse_tlv;
 
 fn positions_of_set_bits(n: u64) -> Vec<u32> {
     (0..64).filter(|&bit| 1 & (n >> (63 - bit)) != 0).map(|bit| bit + 1).collect()
@@ -6,21 +6,43 @@ fn positions_of_set_bits(n: u64) -> Vec<u32> {
 
 trait StringManipulation {
     fn get_slice_until(&mut self, length: usize) -> String;
+    fn hex_to_ascii(&mut self) -> Result<String, hex::FromHexError>;
+    fn process_field(&mut self, field_number :u32, length :u32, name: &str);
 }
 
 impl StringManipulation for String {
+
     fn get_slice_until(&mut self, length: usize) -> String {
         self.drain(..length).collect::<String>()
     }
-}
 
+    fn hex_to_ascii(&mut self) -> Result<String, hex::FromHexError> {
+        let hex_bytes = hex::decode(self)?;
+        let ascii_chars: String = hex_bytes.iter().map(|&byte| byte as char).collect();
+        Ok(ascii_chars)
+    }
 
-fn hex_string_to_bytes(input: &str) -> Vec<u8> {
-    match hex::decode(input) {
-        Ok(bytes) => bytes,
-        Err(e) => {
-            // Handle decoding error
-            panic!("Invalid hex string: {}", e);
+    fn process_field(&mut self, field_number :u32, length :u32, name: &str) {
+
+        let mut field_value = if field_number == 35 {
+            self.get_slice_until(38 as usize)
+        } else {
+            self.get_slice_until(length as usize)
+        };
+
+        let value_to_print = if matches!(field_number, 41 | 42 | 49 | 62) {
+            field_value.hex_to_ascii().unwrap()
+        } else {
+            field_value.to_string()
+        };
+
+        println!("Field {:3} | {:12} | Length: {:3} | {}", field_number, name, length, value_to_print);
+        
+        if field_number == 55 {
+            match parse_tlv(value_to_print) {
+                Ok(tags) => tags.iter().for_each(|tag| println!("{}", tag)),
+                Err(e) => eprintln!("Error parsing TLV: {}", e),
+            }
         }
     }
 }
@@ -41,8 +63,6 @@ fn read_data_from_stdin()-> String {
 }
 
 
-use emv_tlv_parser::parse_tlv;
-
 fn main() {
     let mut s= read_data_from_stdin();
 
@@ -54,47 +74,38 @@ fn main() {
     let bitmap: Vec<u32> = positions_of_set_bits(u64::from_str_radix(&s.get_slice_until(16),16).expect("Unable to get the process code"));
     println!("First Bit Map: {:?}", bitmap);
 
-    for bit in bitmap {
+    for &bit in &bitmap {
         match bit {
-            3 => println!("Process Code: {}", s.get_slice_until(6)),
-            4 => println!("Amount: {}", s.get_slice_until(12)),
-            11 => println!("Trace: {}", s.get_slice_until(6)),
-            12 => println!("Time: {}", s.get_slice_until(6)),
-            13 => println!("Date: {}", s.get_slice_until(4)),
-            22 => println!("Field22: {}", s.get_slice_until(4)),
-            24 => println!("Field24: {}", s.get_slice_until(4)),
-            25 => println!("Field25: {}", s.get_slice_until(2)),
+            3 => s.process_field(3, 6, "Process Code"),
+            4 => s.process_field(4, 12, "Amount"),
+            11 => s.process_field(11, 6, "Trace"),
+            12 => s.process_field(12, 6, "Time"),
+            13 => s.process_field(13, 4, "Date"),
+            22 => s.process_field(22, 4, ""),
+            24 => s.process_field(24, 4, ""),
+            25 => s.process_field(25, 2, ""),
             35 => {
-                let track2_len: u32 = u32::from_str_radix(&s.get_slice_until(2), 10).expect("Unable to get the length of track2");
-                println!(" Field35 length: {}",track2_len);
-                println!("Track2: {}", s.get_slice_until(38));
+                let track2_len: u32 =
+                    u32::from_str_radix(&s.get_slice_until(2), 10).expect("Unable to get the length of track2");
+                s.process_field(35, track2_len, "Track2");
             }
-            41 => println!("Terminal: {}", s.get_slice_until(16)),
-            42 => println!("Acceptor: {}", s.get_slice_until(30)),
-            48 => { 
-                let filed48_len: u32 = u32::from_str_radix(&s.get_slice_until(4), 10).expect("Unable to get the length of field48") * 2;
-                println!(" Filed48 length: {}", filed48_len);
-                println!("Filed48: {}", s.get_slice_until(filed48_len as usize));
-                }
-            49 => println!("Currency: {}", s.get_slice_until(6)),
-            52 => println!("Filed52 PinBlock {}", s.get_slice_until(16)),
-            55 => { 
-                let filed55_len: u32 = u32::from_str_radix(&s.get_slice_until(4), 10).expect("Unable to get the length of field55") * 2;
-                println!(" Filed55 length: {}", filed55_len);
-                let data_raw = s.get_slice_until(filed55_len as usize);
-                println!("Filed55: {}", data_raw);
-                //let data_vec = hex_string_to_bytes(&data_raw);
-                    match parse_tlv(data_raw) { 
-                        Ok(tags) => tags.iter().for_each(|tag| println!("{}", tag)), 
-                        Err(e) => eprintln!("Error parsing TLV: {}", e) 
-                    }
-                }
-            62 => { 
-                let filed62_len: u32 = u32::from_str_radix(&s.get_slice_until(4), 10).expect("Unable to get the length of field62") * 2;
-                println!(" Filed62 length: {}", filed62_len);
-                println!("Filed62: {}", s.get_slice_until(filed62_len as usize));
-                }                
-            64 =>println!("MAC: {}", s.get_slice_until(16)),
+            41 => s.process_field(41, 16, "Terminal"),
+            42 => s.process_field(42, 30, "Acceptor"),
+            48 => {
+                let field48_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
+                s.process_field(48, field48_len, "");
+            }
+            49 => s.process_field(49, 6, "Currency"),
+            52 => s.process_field(52, 16, "PinBlock"),
+            55 => {
+                let field55_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
+                s.process_field(55, field55_len, "");
+            }
+            62 => {
+                let field62_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
+                s.process_field(62, field62_len, "");
+            }
+            64 => s.process_field(64, 16, "MAC"),
             num => println!("The number {} is not defined yet.", num),
         }
     }
