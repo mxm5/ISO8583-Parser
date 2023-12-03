@@ -47,7 +47,7 @@ fn main() {
             42 => s.process_field(42, 30, "Acceptor"),
             48 => {
                 let field48_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
-                s.process_field(48, field48_len, "");
+                s.process_field(48, field48_len, "Aditional Data");
             }
             49 => s.process_field(49, 6, "Currency"),
             52 => s.process_field(52, 16, "PinBlock"),
@@ -57,7 +57,7 @@ fn main() {
             }
             62 => {
                 let field62_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
-                s.process_field(62, field62_len, "");
+                s.process_field(62, field62_len, "IP And Port");
             }
             64 => s.process_field(64, 16, "MAC"),
             num => println!("The number {} is not defined yet.", num),

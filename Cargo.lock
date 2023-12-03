@@ -12,9 +12,9 @@ dependencies = [
 
 [[package]]
 name = "emv_tlv_parser"
-version = "0.1.3"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d52e0f48b702e41887deefd600636628547f1c403a54f4181ef807579869ff5b"
+checksum = "67057b3104331887dbbf710fed36ef71de1c0bc3065e1f26245d8a81ece581f9"
 dependencies = [
  "hex",
 ]
