@@ -2,6 +2,9 @@
 name = "emv_parser"
 version = "0.1.0"
 edition = "2021"
+description = "An EMV Message Parser"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/HosseinAssaran/EMV-Parser"
 
 [dependencies]
 emv_tlv_parser = "0.1.5"
