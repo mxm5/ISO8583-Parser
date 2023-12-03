@@ -204,6 +204,27 @@ mod tests {
         assert!(ltvs.is_ok());
         assert!(ltvs.unwrap().is_empty());
     }
+    
+    use crate::ComplexError;
+    #[test]
+    fn error_test() {
+        let mut s = String::from("T31148690622576F726C64");
+        let ltvs = s.parse_ltv();
+        match ltvs {
+            Err(e) => {
+                assert!(matches!(e, ComplexError::ParseInt(_e)));
+            }
+            _ => panic!("Expected an error but got a result"),
+        }
+        let mut s = String::from("03114Y690622576F726C64");
+        let ltvs = s.parse_ltv();
+        match ltvs {
+            Err(e) => {
+                assert!(matches!(e, ComplexError::FromHex(_e)));
+            }
+            _ => panic!("Expected an error but got a result"),
+        }
+    }
 
     // Add more test cases as needed
 }
