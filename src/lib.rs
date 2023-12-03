@@ -123,8 +123,6 @@ pub mod string_manipulation {
                     let ltv = LTV { length, tag, value};
                     ltvs.push(ltv);
                 }
-                println!("{:?}", &ltvs);
-
             Ok(ltvs)
         }
     }
