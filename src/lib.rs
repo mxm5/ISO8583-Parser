@@ -41,7 +41,8 @@
 
 pub mod string_manipulation {
     use emv_tlv_parser::parse_tlv;
-    
+    use crate::ComplexError;
+
     #[derive(Debug)]
     pub struct  LTV {
         pub length: usize,
@@ -66,7 +67,7 @@ pub mod string_manipulation {
         fn process_field(&mut self, field_number: u32, length: u32, name: &str);
 
         /// Parse LTV (Length, Tag, Value) format.
-        fn parse_ltv(&mut self) -> Result<Vec<LTV>, std::num::ParseIntError>;
+        fn parse_ltv(&mut self) -> Result<Vec<LTV>, ComplexError>;
     }
 
     impl StringManipulation for String {
@@ -108,18 +109,18 @@ pub mod string_manipulation {
                 let mut ltv_value = value_to_print;
                 match ltv_value.parse_ltv() {
                     Ok(ltvs) => ltvs.iter().for_each(|ltv| println!("{}", ltv)),
-                    Err(e) => eprintln!("Error parsing LTV: {}", e),
+                    Err(e) => eprintln!("Error parsing LTV: {:?}", e),
                 }
             }
         }
     
-        fn parse_ltv(&mut self) -> Result<Vec<LTV>, std::num::ParseIntError> {
+        fn parse_ltv(&mut self) -> Result<Vec<LTV>, ComplexError> {
             let mut ltvs = Vec::new();
                 while self.len() > 0 {
                     let length =  self.drain(..2).collect::<String>().parse::<usize>()?;
                     let tag =  self.drain(..2).collect::<String>().parse::<u8>()?;
                     let byte_length  = (length - 1) * 2;
-                    let value = self.drain(..byte_length).collect::<String>().hex_to_ascii().unwrap();
+                    let value = self.drain(..byte_length).collect::<String>().hex_to_ascii()?;
                     let ltv = LTV { length, tag, value};
                     ltvs.push(ltv);
                 }
@@ -128,7 +129,8 @@ pub mod string_manipulation {
     }
 }
 
-use std::fmt;
+use std::{fmt, num::ParseIntError};
+use hex::FromHexError;
 impl fmt::Display for string_manipulation::LTV {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -140,6 +142,25 @@ impl fmt::Display for string_manipulation::LTV {
         )
     }
 }
+
+#[derive(Debug)]
+pub enum ComplexError {
+    ParseInt(ParseIntError),
+    FromHex(FromHexError),
+}
+
+impl From<ParseIntError> for ComplexError {
+    fn from(err: ParseIntError) -> Self {
+        ComplexError::ParseInt(err)
+    }
+}
+
+impl From<FromHexError> for ComplexError {
+    fn from(err: FromHexError) -> Self {
+        ComplexError::FromHex(err)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
