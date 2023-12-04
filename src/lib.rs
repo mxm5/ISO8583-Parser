@@ -41,7 +41,7 @@
 
 pub mod string_manipulation {
     use emv_tlv_parser::parse_tlv;
-    use crate::ComplexError;
+    use std::error;
 
     #[derive(Debug)]
     pub struct  LTV {
@@ -67,7 +67,7 @@ pub mod string_manipulation {
         fn process_field(&mut self, field_number: u32, length: u32, name: &str);
 
         /// Parse LTV (Length, Tag, Value) format.
-        fn parse_ltv(&mut self) -> Result<Vec<LTV>, ComplexError>;
+        fn parse_ltv(&mut self) -> Result<Vec<LTV>, Box<dyn error::Error>>;
     }
 
     impl StringManipulation for String {
@@ -114,7 +114,7 @@ pub mod string_manipulation {
             }
         }
     
-        fn parse_ltv(&mut self) -> Result<Vec<LTV>, ComplexError> {
+        fn parse_ltv(&mut self) -> Result<Vec<LTV>, Box<dyn error::Error>> {
             let mut ltvs = Vec::new();
                 while self.len() > 0 {
                     let length =  self.drain(..2).collect::<String>().parse::<usize>()?;
@@ -129,8 +129,7 @@ pub mod string_manipulation {
     }
 }
 
-use std::{fmt, num::ParseIntError};
-use hex::FromHexError;
+use std::fmt;
 impl fmt::Display for string_manipulation::LTV {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -143,28 +142,10 @@ impl fmt::Display for string_manipulation::LTV {
     }
 }
 
-#[derive(Debug)]
-pub enum ComplexError {
-    ParseInt(ParseIntError),
-    FromHex(FromHexError),
-}
-
-impl From<ParseIntError> for ComplexError {
-    fn from(err: ParseIntError) -> Self {
-        ComplexError::ParseInt(err)
-    }
-}
-
-impl From<FromHexError> for ComplexError {
-    fn from(err: FromHexError) -> Self {
-        ComplexError::FromHex(err)
-    }
-}
-
 
 #[cfg(test)]
 mod tests {
-    use crate::string_manipulation::StringManipulation;
+      use crate::string_manipulation::StringManipulation;
     #[test]
     fn test_parse_ltv_single() {
         let mut s = String::from("061148656C6C6F");
@@ -205,25 +186,16 @@ mod tests {
         assert!(ltvs.unwrap().is_empty());
     }
     
-    use crate::ComplexError;
     #[test]
     fn error_test() {
         let mut s = String::from("T31148690622576F726C64");
         let ltvs = s.parse_ltv();
-        match ltvs {
-            Err(e) => {
-                assert!(matches!(e, ComplexError::ParseInt(_e)));
-            }
-            _ => panic!("Expected an error but got a result"),
-        }
+        assert!(ltvs.is_err());
+        assert_eq!(ltvs.err().unwrap().to_string().as_str(), "invalid digit found in string");
         let mut s = String::from("03114Y690622576F726C64");
         let ltvs = s.parse_ltv();
-        match ltvs {
-            Err(e) => {
-                assert!(matches!(e, ComplexError::FromHex(_e)));
-            }
-            _ => panic!("Expected an error but got a result"),
-        }
+        assert!(ltvs.is_err());
+        assert_eq!(ltvs.err().unwrap().to_string().as_str(), "Invalid character 'Y' at position 1");  
     }
 
     // Add more test cases as needed
