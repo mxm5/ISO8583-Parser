@@ -27,14 +27,14 @@ To run tests, use the following command:
 cargo test
 ```
 
-## Usage As Library
-1. Add the emv+parser package: 
+## Usage As a Library
+1. Add the emv_parser package to your project using Cargo:
 
 ```bash
 cargo add emv_parser
 ```
 
-2. Add this where you want to have access to the functions inside library
+2. Import the necessary modules where you want to use the library functions:
 
 ```bash
 use emv_parser::{StringManipulation, positions_of_set_bits, LTV};
