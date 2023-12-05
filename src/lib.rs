@@ -39,6 +39,10 @@
 //! }
 //! ```
 
+pub use self::string_manipulation::StringManipulation;
+pub use self::string_manipulation::LTV;
+pub use self::string_manipulation::positions_of_set_bits;
+
 pub mod string_manipulation {
     use emv_tlv_parser::parse_tlv;
     use std::error;

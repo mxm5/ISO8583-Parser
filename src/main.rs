@@ -1,4 +1,4 @@
-use emv_parser::string_manipulation::{StringManipulation, positions_of_set_bits};
+use emv_parser::{StringManipulation, positions_of_set_bits};
 
 fn read_data_from_stdin()-> String {
     use std::io::{stdin,stdout,Write};
