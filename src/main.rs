@@ -16,7 +16,21 @@ fn read_data_from_stdin()-> String {
 }
 
 fn main() {
-    let mut s= read_data_from_stdin();
+    let mut s: String;
+
+    // Get command-line arguments
+    let args: Vec<String> = std::env::args().collect();
+
+    // Check if at least one argument is provided
+    if args.len() > 1 {
+        // Argument provided, use the first one
+         s = args[1].clone();
+        println!("Argument: {}", s);
+    } else {
+        // No argument provided, use a default message
+        println!("No argument provided. Enter a message:");
+        s = read_data_from_stdin();
+    }
 
     s = s.replace("\"", "").replace(" ", "");
     let message_len = u32::from_str_radix(&s.get_slice_until(4), 16).expect("Unable to get the length") * 2;
