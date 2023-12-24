@@ -4,10 +4,13 @@ This Rust program gets emv messagesv in hex string format and it extracts and pr
 
 ## Usage
 
+### Utilize as a Command Line Interface (CLI).
+
 1. Clone the repository:
 
     ```bash
     git clone https://github.com/HosseinAssaran/EMV-Parser
+    cd EMV-Parser
     ```
 
 2. Build and run the program:
@@ -18,6 +21,29 @@ This Rust program gets emv messagesv in hex string format and it extracts and pr
     ```
 
 3. Follow the prompts to enter an EMV message for parsing.
+
+### Integrate the Rust Parser CLI with a PHP Web Server.
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/HosseinAssaran/EMV-Parser
+    cd EMV-Parser
+    ```
+
+2. Build relaese:
+   
+    ```bash
+    cargo build --release
+    ````
+
+3. Run PHP Server:
+   
+    ```bash
+    php -S localhost:12345
+    ```` 
+
+4. Open you browser and go to `localhost:12345`
 
 ## Testing
 
