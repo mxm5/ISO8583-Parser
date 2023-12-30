@@ -45,12 +45,18 @@ fn main() {
 
     for &bit in &bitmap {
         match bit {
+            2 => {
+                let pan_len: u32 =  s.get_slice_until(2).parse::<u32>().unwrap();
+                s.process_field(2, pan_len, "PAN");
+            }
             3 => s.process_field(3, 6, "Process Code"),
             4 => s.process_field(4, 12, "Amount"),
             11 => s.process_field(11, 6, "Trace"),
             12 => s.process_field(12, 6, "Time"),
             13 => s.process_field(13, 4, "Date"),
-            22 => s.process_field(22, 4, ""),
+            14 => s.process_field(14, 4, "Card EXpiration Date"),
+            22 => s.process_field(22, 4, "POS Entry Mode"),
+            23 => s.process_field(23, 3, "Card Sequence Number"),
             24 => s.process_field(24, 4, ""),
             25 => s.process_field(25, 2, ""),
             35 => {
@@ -59,6 +65,10 @@ fn main() {
             }
             41 => s.process_field(41, 16, "Terminal"),
             42 => s.process_field(42, 30, "Acceptor"),
+            45 => {
+                let track1_len: u32 = s.get_slice_until(2).parse::<u32>().unwrap();
+                s.process_field(45, track1_len, "Track 1 Data"),
+            }
             48 => {
                 let field48_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
                 s.process_field(48, field48_len, "Aditional Data");
