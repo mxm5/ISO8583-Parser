@@ -50,11 +50,16 @@ fn main() {
                 s.process_field(2, pan_len, "PAN");
             }
             3 => s.process_field(3, 6, "Process Code"),
-            4 => s.process_field(4, 12, "Amount"),
+            4 => s.process_field(4, 12, "Transaction Amount"),
+            5 => s.process_field(5, 12, "Settlement Amount"),
+            6 => s.process_field(6, 12, "Cardholder Billing Amount"),
+            7 => s.process_field(7, 10, "Transaction Date and Time"),
             11 => s.process_field(11, 6, "Trace"),
             12 => s.process_field(12, 6, "Time"),
             13 => s.process_field(13, 4, "Date"),
             14 => s.process_field(14, 4, "Card EXpiration Date"),
+            18 => s.process_field(18, 4, "Merchant Category Code"),
+            19 => s.process_field(19, 3, "Acquirer Country Code"),
             22 => s.process_field(22, 4, "POS Entry Mode"),
             23 => s.process_field(23, 3, "Card Sequence Number"),
             24 => s.process_field(24, 4, ""),
@@ -63,8 +68,12 @@ fn main() {
                 let track2_len: u32 = s.get_slice_until(2).parse::<u32>().unwrap();
                 s.process_field(35, track2_len, "Track2");
             }
+            37 => s.process_field(37, 12, "Retrieval Ref #"),
+            38 => s.process_field(38, 6, "Authorization Code"),
+            39 => s.process_field(39, 2, "Response Code"),
             41 => s.process_field(41, 16, "Terminal"),
             42 => s.process_field(42, 30, "Acceptor"),
+            43 => s.process_field(43, 40, "Card Acceptor Name/Location"),
             45 => {
                 let track1_len: u32 = s.get_slice_until(2).parse::<u32>().unwrap();
                 s.process_field(45, track1_len, "Track 1 Data"),
@@ -73,7 +82,9 @@ fn main() {
                 let field48_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
                 s.process_field(48, field48_len, "Aditional Data");
             }
-            49 => s.process_field(49, 6, "Currency"),
+            49 => s.process_field(49, 6, "Transaction Currency Code"),
+            50 => s.process_field(50, 6, "Settlement Currency Code"),
+            51 => s.process_field(51, 6, "Billing Currency Code"),
             52 => s.process_field(52, 16, "PinBlock"),
             55 => {
                 let field55_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
