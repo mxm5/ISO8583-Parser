@@ -76,7 +76,7 @@ fn main() {
             43 => s.process_field(43, 40, "Card Acceptor Name/Location"),
             45 => {
                 let track1_len: u32 = s.get_slice_until(2).parse::<u32>().unwrap();
-                s.process_field(45, track1_len, "Track 1 Data"),
+                s.process_field(45, track1_len, "Track 1 Data");
             }
             48 => {
                 let field48_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
