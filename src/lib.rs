@@ -95,7 +95,7 @@ pub mod string_manipulation {
                 self.get_slice_until(length as usize)
             };
 
-            let value_to_print = if matches!(field_number, 41 | 42 | 49 | 62) {
+            let value_to_print = if matches!(field_number, 37 | 38 | 41 | 42 | 49 | 62) {
                 field_value.hex_to_ascii().unwrap()
             } else {
                 field_value.to_string()

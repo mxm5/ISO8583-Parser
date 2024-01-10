@@ -38,7 +38,7 @@ fn main() {
     if s.len() != message_len as usize {
         panic!("Error: Incorrect message len. The expected length is {} but The actual is {}", message_len,  s.len());
     }
-    println!("Non Parsed Yet: {}", s.get_slice_until(10));
+    println!("Header: {}", s.get_slice_until(10));
     println!("MTI: {}", s.get_slice_until(4));
     let bitmap: Vec<u32> = positions_of_set_bits(u64::from_str_radix(&s.get_slice_until(16),16).expect("Unable to get the process code"));
     println!("First Bit Map: {:?}", bitmap);
@@ -68,9 +68,9 @@ fn main() {
                 let track2_len: u32 = s.get_slice_until(2).parse::<u32>().unwrap();
                 s.process_field(35, track2_len, "Track2");
             }
-            37 => s.process_field(37, 12, "Retrieval Ref #"),
-            38 => s.process_field(38, 6, "Authorization Code"),
-            39 => s.process_field(39, 2, "Response Code"),
+            37 => s.process_field(37, 24, "Retrieval Ref #"),
+            38 => s.process_field(38, 12, "Authorization Code"),
+            39 => s.process_field(39, 4, "Response Code"),
             41 => s.process_field(41, 16, "Terminal"),
             42 => s.process_field(42, 30, "Acceptor"),
             43 => s.process_field(43, 40, "Card Acceptor Name/Location"),
