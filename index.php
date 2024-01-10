@@ -10,11 +10,11 @@
     <h1>EMV Message Parser</h1>
 
     <form method="get">
-        <label for="lengthCheckBox">Add lenght to the message:</label>
+        <label for="lengthCheckBox">The message has no length</label>
         <input type="checkbox" name="lengthCheckBox" id="lengthCheckBox"
         <?php if ( isset($_GET['lengthCheckBox']) && $_GET['lengthCheckBox'] == "on") {echo "checked";}?>>
         <br/>
-        <label for="headerCheckbox">Add default header to the message:</label>
+        <label for="headerCheckbox">The message has no header</label>
         <input type="checkbox" name="headerCheckbox" id="headerCheckbox"
         <?php if ( isset($_GET['headerCheckbox']) && $_GET['headerCheckbox'] == "on") {echo "checked";}?>>
         <br/>
