@@ -21,9 +21,10 @@
         <br/>
         <label for="Message">Enter the message:</label>
         <br/>
-
+        <span style="color:Gray">(e.g. '0012600008000001002000000000000000930000')</span>
+        <br/>
         <textarea required value="<?php echo $_GET['emv_message']?? '' ?>"
-        type="text" id="emv_message" name="emv_message" placeholder="e.g., 061148656C6C6F"
+        type="text" id="emv_message" name="emv_message"
         rows="10" cols="50" ><?php if ( isset($_GET['emv_message'])) echo $_GET['emv_message']?></textarea>
         <br/>
         <button type="submit">Parse Message</button>
