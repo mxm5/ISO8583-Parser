@@ -17,10 +17,14 @@
         <input type="checkbox" name="headerCheckbox" id="headerCheckbox">
         <br/>
         <br/>
-        <label for="Message">Enter Rust Argument:</label>
-        <input required value="<?php echo $_POST['emv_message']?? '' ?>" 
-        type="text" id="emv_message" name="emv_message" placeholder="e.g., 061148656C6C6F">
-        <button type="submit">Run Command</button>
+        <label for="Message">Enter the message:</label>
+        <br/>
+
+        <textarea required value="<?php echo $_POST['emv_message']?? '' ?>"
+        type="text" id="emv_message" name="emv_message" placeholder="e.g., 061148656C6C6F"
+        rows="10" cols="50" ></textarea>
+        <br/>
+        <button type="submit">Parse Message</button>
     </form>
 
     <?php
