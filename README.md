@@ -1,6 +1,6 @@
-# EMV Parser
+# ISO8583 parser 
 
-This Rust program gets emv messagesv in hex string format and it extracts and processes specific fields from an input message.
+This Rust program gets iso messages in hex string format and it extracts and processes specific fields from an input message.
 
 ## Usage
 
