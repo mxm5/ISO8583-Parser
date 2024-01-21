@@ -101,7 +101,7 @@ pub mod string_manipulation {
                 field_value.to_string()
             };
 
-            println!("Field {:3} | {:12} | Length: {:3} | {}", field_number, name, length, value_to_print);
+            println!("Field {:3} | Length: {:3}| {:25} | {}", field_number, length, name, value_to_print);
             
             if field_number == 55 {
                 match parse_tlv(value_to_print) {
