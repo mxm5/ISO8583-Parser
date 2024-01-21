@@ -1,4 +1,5 @@
 use emv_parser::{StringManipulation, positions_of_set_bits};
+use clap::Parser;
 
 fn read_data_from_stdin()-> String {
     use std::io::{stdin,stdout,Write};
@@ -15,32 +16,44 @@ fn read_data_from_stdin()-> String {
     data_raw
 }
 
+/// Arguments
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// message to get
+    #[arg(short, long, required = false)]
+    message: Option<String>,
+
+    #[arg(short, long)]
+    including_header_length: bool,
+}
+
 fn main() {
-    let mut s: String;
-
     // Get command-line arguments
-    let args: Vec<String> = std::env::args().collect();
+    let args = Args::parse();
 
-    // Check if at least one argument is provided
-    if args.len() > 1 {
-        // Argument provided, use the first one
-         s = args[1].clone();
-        println!("Argument: {}", s);
-    } else {
-        // No argument provided, use a default message
-        println!("No argument provided. Enter a message:");
-        s = read_data_from_stdin();
-    }
-
+    // Check if message argument is provided unless read data from stdin
+    let mut s = match args.message {
+        Some(m) => m,
+        None => read_data_from_stdin(), 
+    };
     s = s.replace("\"", "").replace(" ", "");
-    let message_len = u32::from_str_radix(&s.get_slice_until(4), 16).expect("Unable to get the length") * 2;
-    println!("Lentgh Of Message: {}", message_len );
-    if s.len() != message_len as usize {
-        panic!("Error: Incorrect message len. The expected length is {} but The actual is {}", message_len,  s.len());
+    if args.including_header_length {
+        let message_len = u32::from_str_radix(&s.get_slice_until(4), 16).expect("Unable to get the length") * 2;
+        println!("Lentgh Of Message: {}", message_len );
+        if s.len() != message_len as usize {
+            panic!("Error: Incorrect message len. The expected length is {} but The actual is {}", message_len,  s.len());
+        }
+        println!("Header: {}", s.get_slice_until(10));
     }
-    println!("Header: {}", s.get_slice_until(10));
     println!("MTI: {}", s.get_slice_until(4));
-    let bitmap: Vec<u32> = positions_of_set_bits(u64::from_str_radix(&s.get_slice_until(16),16).expect("Unable to get the process code"));
+    let mut bitmap: Vec<u32> = positions_of_set_bits(u64::from_str_radix(&s.get_slice_until(16),16).expect("Unable to get the process code"));
+    if bitmap.contains(&1) {
+        let mut positions = positions_of_set_bits(u64::from_str_radix(&s.get_slice_until(16), 16).expect("Unable to get the process code"));
+        positions.iter_mut().for_each(|num| *num += 64);
+        bitmap.append(&mut positions);
+        bitmap.retain(|&x| x != 1);
+    }
     println!("First Bit Map: {:?}", bitmap);
 
     for &bit in &bitmap {
@@ -90,12 +103,18 @@ fn main() {
                 let field55_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
                 s.process_field(55, field55_len, "");
             }
+            60 => {
+                let field60_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
+                s.process_field(60, field60_len, "");              
+            }
             62 => {
                 let field62_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
                 s.process_field(62, field62_len, "IP And Port");
             }
             64 => s.process_field(64, 16, "MAC"),
-            num => println!("The number {} is not defined yet.", num),
+            70 => s.process_field(70, 4, ""),
+            128 => s.process_field(128, 16, "MAC"),
+            num => {println!("The number {} is not defined yet.", num); return;},
         }
     }
     if !s.is_empty() {
