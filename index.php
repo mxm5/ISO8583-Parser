@@ -10,18 +10,16 @@
     <h1>EMV Message Parser</h1>
 
     <form method="get">
-        <label for="lengthCheckBox">The message has no length</label>
-        <input type="checkbox" name="lengthCheckBox" id="lengthCheckBox"
-        <?php if ( isset($_GET['lengthCheckBox']) && $_GET['lengthCheckBox'] == "on") {echo "checked";}?>>
-        <br/>
-        <label for="headerCheckbox">The message has no header</label>
-        <input type="checkbox" name="headerCheckbox" id="headerCheckbox"
-        <?php if ( isset($_GET['headerCheckbox']) && $_GET['headerCheckbox'] == "on") {echo "checked";}?>>
-        <br/>
+        <label for="inlcudeLengthHeader">The message includes length and header</label>
+        <input type="checkbox" name="inlcudeLengthHeader" id="inlcudeLengthHeader"
+        <?php if ( isset($_GET['inlcudeLengthHeader']) && $_GET['inlcudeLengthHeader'] == "on") {echo "checked";}?>>
         <br/>
         <label for="Message">Enter the message:</label>
         <br/>
-        <span style="color:Gray">(e.g. '0012600008000001002000000000000000930000')</span>
+        <span style="color:Gray">(e.g. '01002000000000000000930000')</span>
+        <br/>
+        <span style="color:Gray">(e.g. '0012600008000001002000000000000000930000' 
+        while including header and length)</span>
         <br/>
         <textarea required value="<?php echo $_GET['emv_message']?? '' ?>"
         type="text" id="emv_message" name="emv_message"
@@ -34,21 +32,14 @@
     if (isset($_GET['emv_message'])) {
     
         $emv_message = $_GET['emv_message'];
-
-        if(isset($_GET['headerCheckbox'])) {
-            $emv_message = "UnkownHead".htmlspecialchars($emv_message);
-        }
-        if(isset($_GET['lengthCheckBox'])) {
-            $length = strlen($emv_message);
-            if($length%2 == 0) {$length = $length / 2;}
-            else { echo '<font color="red">The message length is not correct</font>';}
-            $hexLength = str_pad(dechex($length), 4, '0', STR_PAD_LEFT);
-            $emv_message = $hexLength.htmlspecialchars($emv_message);
+        $parser_arguments = "-m " . $emv_message;
+        if(isset($_GET['inlcudeLengthHeader'])) {
+            $parser_arguments = "-i " . $parser_arguments;
         }
         $output = [];
 
         // Use shell_exec to run the Rust command with the emv_message as argument
-        exec("target\\release\\emv_parser.exe $emv_message 2>&1", $output, $returnCode);
+        exec("target\\release\\emv_parser.exe $parser_arguments 2>&1", $output, $returnCode);
         if ($returnCode !== 0) {
             echo '<p>Error parsing message. Return code: ' . $returnCode . '</p>';
             echo '<p>Error output:  </p>';
