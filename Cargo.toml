@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/HosseinAssaran/EMV-Parser"
 
 [dependencies]
-emv_tlv_parser = "0.1.6"
+emv_tlv_parser = "0.1.8"
 hex = "0.4.3"
 
 [http]
