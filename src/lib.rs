@@ -5,7 +5,7 @@
 //! ## Examples
 //!
 //! ```
-//! use emv_parser::string_manipulation::StringManipulation;
+//! use iso8583_parser::string_manipulation::StringManipulation;
 //!
 //! let mut s = String::from("48656C6C6F2C576F726C64"); // "Hello, World" in hex
 //!
@@ -24,7 +24,7 @@
 //! // Process a field based on field number, length, and name
 //! s.process_field(1, 12, "test");
 //!
-//! use emv_parser::string_manipulation::positions_of_set_bits;
+//! use iso8583_parser::string_manipulation::positions_of_set_bits;
 //!
 //! let bitmap: Vec<u32> = positions_of_set_bits(u64::from_str_radix("3038058020C19201", 16).unwrap());
 //! assert_eq!(bitmap, vec![3, 4, 11, 12, 13, 22, 24, 25, 35, 41, 42, 48, 49, 52, 55, 64]);

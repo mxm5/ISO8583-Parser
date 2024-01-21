@@ -1,4 +1,4 @@
-use emv_parser::string_manipulation::{StringManipulation, positions_of_set_bits};
+use iso8583_parser::string_manipulation::{StringManipulation, positions_of_set_bits};
 
 #[cfg(test)]
 mod tests {

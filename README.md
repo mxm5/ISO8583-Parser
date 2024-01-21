@@ -9,8 +9,8 @@ This Rust program gets iso messages in hex string format and it extracts and pro
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/HosseinAssaran/EMV-Parser
-    cd EMV-Parser
+    git clone https://github.com/HosseinAssaran/ISO8583-Parser
+    cd ISO8583-Parser
     ```
 
 2. Build and run the program:
@@ -20,15 +20,15 @@ This Rust program gets iso messages in hex string format and it extracts and pro
     cargo run
     ```
 
-3. Follow the prompts to enter an EMV message for parsing.
+3. Follow the prompts to enter an iso message for parsing.
 
 ### Integrate the Rust Parser CLI with a PHP Web Server.
 
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/HosseinAssaran/EMV-Parser
-    cd EMV-Parser
+    git clone https://github.com/HosseinAssaran/ISO8583-Parser
+    cd ISO8583-Parser
     ```
 
 2. Build relaese:
@@ -54,15 +54,15 @@ cargo test
 ```
 
 ## Usage As a Library
-1. Add the emv_parser package to your project using Cargo:
+1. Add the iso8583_parser package to your project using Cargo:
 
 ```bash
-cargo add emv_parser
+cargo add iso8583_parser
 ```
 
 2. Import the necessary modules where you want to use the library functions:
 
 ```bash
-use emv_parser::{StringManipulation, positions_of_set_bits, LTV};
+use iso8583_parser::{StringManipulation, positions_of_set_bits, LTV};
 
 ```
