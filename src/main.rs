@@ -1,4 +1,4 @@
-use emv_parser::{StringManipulation, positions_of_set_bits};
+use iso8583_parser::{StringManipulation, positions_of_set_bits};
 use clap::Parser;
 
 fn read_data_from_stdin()-> String {
