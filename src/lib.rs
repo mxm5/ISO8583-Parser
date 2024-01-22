@@ -5,7 +5,7 @@
 //! ## Examples
 //!
 //! ```
-//! use iso8583_parser::string_manipulation::StringManipulation;
+//! use iso8583_parser::StringManipulation;
 //!
 //! let mut s = String::from("48656C6C6F2C576F726C64"); // "Hello, World" in hex
 //!
@@ -24,7 +24,7 @@
 //! // Process a field based on field number, length, and name
 //! s.process_field(1, 12, "test");
 //!
-//! use iso8583_parser::string_manipulation::positions_of_set_bits;
+//! use iso8583_parser::positions_of_set_bits;
 //!
 //! let bitmap: Vec<u32> = positions_of_set_bits(u64::from_str_radix("3038058020C19201", 16).unwrap());
 //! assert_eq!(bitmap, vec![3, 4, 11, 12, 13, 22, 24, 25, 35, 41, 42, 48, 49, 52, 55, 64]);
@@ -39,102 +39,96 @@
 //! }
 //! ```
 
-pub use self::string_manipulation::StringManipulation;
-pub use self::string_manipulation::LTV;
-pub use self::string_manipulation::positions_of_set_bits;
+use emv_tlv_parser::parse_tlv;
+use std::error;
 
-pub mod string_manipulation {
-    use emv_tlv_parser::parse_tlv;
-    use std::error;
+#[derive(Debug)]
+pub struct  LTV {
+    pub length: usize,
+    pub tag: u8,
+    pub value: String,
+}
 
-    #[derive(Debug)]
-    pub struct  LTV {
-        pub length: usize,
-        pub tag: u8,
-        pub value: String,
+/// Returns the positions of set bits in a binary number.
+pub fn positions_of_set_bits(n: u64) -> Vec<u32> {
+    (0..64).filter(|&bit| 1 & (n >> (63 - bit)) != 0).map(|bit| bit + 1).collect()
+}
+
+/// Trait for string manipulation operations.
+pub trait StringManipulation {
+    /// Get a slice of the string until a specified length.
+    fn get_slice_until(&mut self, length: usize) -> String;
+
+    /// Convert a hex string to ASCII.
+    fn hex_to_ascii(&mut self) -> Result<String, hex::FromHexError>;
+
+    /// Process a field based on field number, length, and name.
+    fn process_field(&mut self, field_number: u32, length: u32, name: &str);
+
+    /// Parse LTV (Length, Tag, Value) format.
+    fn parse_ltv(&mut self) -> Result<Vec<LTV>, Box<dyn error::Error>>;
+}
+
+impl StringManipulation for String {
+    /// Get a slice of the string until a specified length.
+    fn get_slice_until(&mut self, length: usize) -> String {
+        self.drain(..length).collect::<String>()
     }
 
-    /// Returns the positions of set bits in a binary number.
-    pub fn positions_of_set_bits(n: u64) -> Vec<u32> {
-        (0..64).filter(|&bit| 1 & (n >> (63 - bit)) != 0).map(|bit| bit + 1).collect()
-    }
-    
-    /// Trait for string manipulation operations.
-    pub trait StringManipulation {
-        /// Get a slice of the string until a specified length.
-        fn get_slice_until(&mut self, length: usize) -> String;
-
-        /// Convert a hex string to ASCII.
-        fn hex_to_ascii(&mut self) -> Result<String, hex::FromHexError>;
-
-        /// Process a field based on field number, length, and name.
-        fn process_field(&mut self, field_number: u32, length: u32, name: &str);
-
-        /// Parse LTV (Length, Tag, Value) format.
-        fn parse_ltv(&mut self) -> Result<Vec<LTV>, Box<dyn error::Error>>;
+    /// Convert a hex string to ASCII.
+    fn hex_to_ascii(&mut self) -> Result<String, hex::FromHexError> {
+        let hex_bytes = hex::decode(self)?;
+        let ascii_chars: String = hex_bytes.iter().map(|&byte| byte as char).collect();
+        Ok(ascii_chars)
     }
 
-    impl StringManipulation for String {
-        /// Get a slice of the string until a specified length.
-        fn get_slice_until(&mut self, length: usize) -> String {
-            self.drain(..length).collect::<String>()
-        }
+    /// Process a field based on field number, length, and name.
+    fn process_field(&mut self, field_number: u32, length: u32, name: &str) {
+        let mut field_value = if field_number == 35 {
+            self.get_slice_until(38 as usize)
+        } else {
+            self.get_slice_until(length as usize)
+        };
 
-        /// Convert a hex string to ASCII.
-        fn hex_to_ascii(&mut self) -> Result<String, hex::FromHexError> {
-            let hex_bytes = hex::decode(self)?;
-            let ascii_chars: String = hex_bytes.iter().map(|&byte| byte as char).collect();
-            Ok(ascii_chars)
-        }
+        let value_to_print = if matches!(field_number, 37 | 38 | 41 | 42 | 49 | 62) {
+            field_value.hex_to_ascii().unwrap()
+        } else {
+            field_value.to_string()
+        };
 
-        /// Process a field based on field number, length, and name.
-        fn process_field(&mut self, field_number: u32, length: u32, name: &str) {
-            let mut field_value = if field_number == 35 {
-                self.get_slice_until(38 as usize)
-            } else {
-                self.get_slice_until(length as usize)
-            };
-
-            let value_to_print = if matches!(field_number, 37 | 38 | 41 | 42 | 49 | 62) {
-                field_value.hex_to_ascii().unwrap()
-            } else {
-                field_value.to_string()
-            };
-
-            println!("Field {:3} | Length: {:3}| {:25} | {}", field_number, length, name, value_to_print);
-            
-            if field_number == 55 {
-                match parse_tlv(value_to_print) {
-                    Ok(tags) => tags.iter().for_each(|tag| println!("{}", tag)),
-                    Err(e) => eprintln!("Error parsing TLV: {}", e),
-                }
-            }
-            else if field_number == 48 {
-                let mut ltv_value = value_to_print;
-                match ltv_value.parse_ltv() {
-                    Ok(ltvs) => ltvs.iter().for_each(|ltv| println!("{}", ltv)),
-                    Err(e) => eprintln!("Error parsing LTV: {:?}", e),
-                }
+        println!("Field {:3} | Length: {:3}| {:25} | {}", field_number, length, name, value_to_print);
+        
+        if field_number == 55 {
+            match parse_tlv(value_to_print) {
+                Ok(tags) => tags.iter().for_each(|tag| println!("{}", tag)),
+                Err(e) => eprintln!("Error parsing TLV: {}", e),
             }
         }
-    
-        fn parse_ltv(&mut self) -> Result<Vec<LTV>, Box<dyn error::Error>> {
-            let mut ltvs = Vec::new();
-                while self.len() > 0 {
-                    let length =  self.drain(..2).collect::<String>().parse::<usize>()?;
-                    let tag =  self.drain(..2).collect::<String>().parse::<u8>()?;
-                    let byte_length  = (length - 1) * 2;
-                    let value = self.drain(..byte_length).collect::<String>().hex_to_ascii()?;
-                    let ltv = LTV { length, tag, value};
-                    ltvs.push(ltv);
-                }
-            Ok(ltvs)
+        else if field_number == 48 {
+            let mut ltv_value = value_to_print;
+            match ltv_value.parse_ltv() {
+                Ok(ltvs) => ltvs.iter().for_each(|ltv| println!("{}", ltv)),
+                Err(e) => eprintln!("Error parsing LTV: {:?}", e),
+            }
         }
+    }
+
+    fn parse_ltv(&mut self) -> Result<Vec<LTV>, Box<dyn error::Error>> {
+        let mut ltvs = Vec::new();
+            while self.len() > 0 {
+                let length =  self.drain(..2).collect::<String>().parse::<usize>()?;
+                let tag =  self.drain(..2).collect::<String>().parse::<u8>()?;
+                let byte_length  = (length - 1) * 2;
+                let value = self.drain(..byte_length).collect::<String>().hex_to_ascii()?;
+                let ltv = LTV { length, tag, value};
+                ltvs.push(ltv);
+            }
+        Ok(ltvs)
     }
 }
 
 use std::fmt;
-impl fmt::Display for string_manipulation::LTV {
+impl fmt::Display for LTV {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -149,7 +143,7 @@ impl fmt::Display for string_manipulation::LTV {
 
 #[cfg(test)]
 mod tests {
-      use crate::string_manipulation::StringManipulation;
+      use crate::StringManipulation;
     #[test]
     fn test_parse_ltv_single() {
         let mut s = String::from("061148656C6C6F");
