@@ -99,6 +99,10 @@ fn main() {
             50 => s.process_field(50, 6, "Settlement Currency Code"),
             51 => s.process_field(51, 6, "Billing Currency Code"),
             52 => s.process_field(52, 16, "PinBlock"),
+            54 => {
+                let field54_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
+                s.process_field(54, field54_len, "Amount");
+            }
             55 => {
                 let field55_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
                 s.process_field(55, field55_len, "");
