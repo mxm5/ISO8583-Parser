@@ -2,7 +2,4 @@
     "rust-analyzer.linkedProjects": [
         ".\\Cargo.toml"
     ],
-    
-    "C_Cpp.default.compilerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Tools\\MSVC\\14.30.30705\\bin\\Hostx64\\x64\\cl.exe",
-    "C_Cpp.default.linkerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Tools\\MSVC\\14.30.30705\\bin\\Hostx64\\x64\\link.exe"
 }
