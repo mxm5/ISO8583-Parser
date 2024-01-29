@@ -119,7 +119,7 @@ impl StringManipulation for String {
                 let length =  self.drain(..2).collect::<String>().parse::<usize>()?;
                 let tag =  self.drain(..2).collect::<String>().parse::<u8>()?;
                 let byte_length  = (length - 1) * 2;
-                let value = self.drain(..byte_length).collect::<String>().hex_to_ascii()?;
+                let value = self.drain(..byte_length).collect::<String>();
                 let ltv = LTV { length, tag, value};
                 ltvs.push(ltv);
             }
@@ -130,12 +130,17 @@ impl StringManipulation for String {
 use std::fmt;
 impl fmt::Display for LTV {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let value_string = match self.value.clone().hex_to_ascii() {
+            Ok(ascii) => format!("-> {}", ascii),
+            Err(_) => String::new(), // Handle the error case, you might want to log or handle it differently
+        };
         write!(
             f,
-            "\tlength: {:3} | tag: {:3} | value: {}",
+            "\tLen: {:3} | Tag: {:3} | Val: {} {}",
             self.length,
             self.tag,
             self.value,
+            value_string,
         )
     }
 }
