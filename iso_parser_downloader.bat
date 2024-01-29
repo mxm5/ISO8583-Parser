@@ -1,7 +1,7 @@
 @echo off
 
 REM Set the URL of the file to download
-set "url=https://github.com/HosseinAssaran/ISO8583-Parser/releases/download/v0.1.5/emv_parser.exe"
+set "url=https://github.com/HosseinAssaran/ISO8583-Parser/releases/download/v0.1.8/emv_parser.exe"
 
 REM Set the absolute destination path for the downloaded file
 set "destination=%~dp0/target/release/mv_parser.exe"
