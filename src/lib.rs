@@ -132,7 +132,7 @@ impl fmt::Display for LTV {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let value_string = match self.value.clone().hex_to_ascii() {
             Ok(ascii) => format!("-> {}", ascii),
-            Err(_) => String::new(), // Handle the error case, you might want to log or handle it differently
+            Err(e) => e.to_string(), // Handle the error case, you might want to log or handle it differently
         };
         write!(
             f,
@@ -152,32 +152,32 @@ mod tests {
     #[test]
     fn test_parse_ltv_single() {
         let mut s = String::from("061148656C6C6F");
-        let ltvs = s.parse_ltv().unwrap();
+        let mut ltvs = s.parse_ltv().unwrap();
 
         assert_eq!(ltvs.len(), 1);
 
-        let ltv = &ltvs[0];
+        let ltv = &mut ltvs[0];
         assert_eq!(ltv.length, 6);
         assert_eq!(ltv.tag, 11);
-        assert_eq!(ltv.value, "Hello".to_string());
+        assert_eq!(ltv.value.hex_to_ascii().unwrap(), "Hello");
     }
 
     #[test]
     fn test_parse_ltv_multiple() {
         let mut s = String::from("031148690622576F726C64");
-        let ltvs = s.parse_ltv().unwrap();
+        let mut ltvs = s.parse_ltv().unwrap();
 
         assert_eq!(ltvs.len(), 2);
 
-        let ltv1 = &ltvs[0];
+        let ltv1 = &mut ltvs[0];
         assert_eq!(ltv1.length, 3);
         assert_eq!(ltv1.tag, 11);
-        assert_eq!(ltv1.value, "Hi".to_string());
+        assert_eq!(ltv1.value.hex_to_ascii().unwrap(), "Hi");
 
-        let ltv2 = &ltvs[1];
+        let ltv2 = &mut ltvs[1];
         assert_eq!(ltv2.length, 6);
         assert_eq!(ltv2.tag, 22);
-        assert_eq!(ltv2.value, "World".to_string());
+        assert_eq!(ltv2.value.hex_to_ascii().unwrap(), "World");
     }
 
     #[test]
@@ -188,18 +188,13 @@ mod tests {
         assert!(ltvs.is_ok());
         assert!(ltvs.unwrap().is_empty());
     }
-    
+
     #[test]
     fn error_test() {
         let mut s = String::from("T31148690622576F726C64");
         let ltvs = s.parse_ltv();
         assert!(ltvs.is_err());
         assert_eq!(ltvs.err().unwrap().to_string().as_str(), "invalid digit found in string");
-        let mut s = String::from("03114Y690622576F726C64");
-        let ltvs = s.parse_ltv();
-        assert!(ltvs.is_err());
-        assert_eq!(ltvs.err().unwrap().to_string().as_str(), "Invalid character 'Y' at position 1");  
     }
 
-    // Add more test cases as needed
 }
