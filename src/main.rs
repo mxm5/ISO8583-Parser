@@ -117,6 +117,10 @@ fn main() {
             }
             64 => s.process_field(64, 16, "MAC"),
             70 => s.process_field(70, 4, ""),
+            122 => {
+                let field122_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
+                s.process_field(122, field122_len, "Additional Data");
+            }
             128 => s.process_field(128, 16, "MAC"),
             num => {println!("The number {} is not defined yet.", num); return;},
         }
