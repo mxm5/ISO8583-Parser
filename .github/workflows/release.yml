@@ -4,8 +4,7 @@ name: Release
 # Run on every commit tag which begins with "v" (e.g., "v0.1.4")
 on:
   push:
-    tags:
-      - "v*"
+    branches: [ "master" ]
 
 # Automatically create a GitHub Release, with release details specified (the relevant commits)
 jobs:
@@ -13,14 +12,12 @@ jobs:
     permissions:
       contents: write
     name: "Release"
-    runs-on: "ubuntu-latest"
+    runs-on: "windows-latest"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Add windows target
-        run: rustup target add x86_64-pc-windows-gnu
       - name: Build Release
-        run: cargo build --release --target x86_64-pc-windows-gnu
+        run: cargo build --release
       - uses: softprops/action-gh-release@v1
         with:
           files: |
