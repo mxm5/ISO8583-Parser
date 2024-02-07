@@ -13,3 +13,8 @@ hex = "0.4.3"
 
 [http]
 http.check-revoke = "false"
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1
