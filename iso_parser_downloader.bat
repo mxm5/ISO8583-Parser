@@ -1,10 +1,22 @@
 @echo off
+setlocal enabledelayedexpansion
+
+set "CARGO_TOML=Cargo.toml"
+
+for /f "usebackq tokens=1,* delims==" %%a in (`findstr /r "^version" "%CARGO_TOML%"`) do (
+    set VERSION=%%b
+    set VERSION=!VERSION:~2,-1!
+    echo The version in %CARGO_TOML% is: !VERSION!
+)
 
 REM Set the URL of the file to download
-set "url=https://github.com/HosseinAssaran/ISO8583-Parser/releases/download/v0.1.8/iso8583_parser.exe"
+set "url=https://github.com/HosseinAssaran/ISO8583-Parser/releases/download/v!VERSION!/iso8583_parser.exe"
 
 REM Set the absolute destination path for the downloaded file
-set "destination=%~dp0/target/release/iso8583_parser.exe"
+set "target_dir=%~dp0\\target\\release"
+echo %target_dir%
+set "destination=%target_dir%\\iso8583_parser.exe"
+md  %target_dir% 2>nul
 
 REM Download the file using bitsadmin
 bitsadmin /transfer myDownloadJob /download /priority normal %url% %destination%
