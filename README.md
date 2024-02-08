@@ -1,4 +1,8 @@
 # ISO8583 parser 
+![Crates.io](https://img.shields.io/crates/v/iso8583_parser?style=flat-square)
+![Crates.io](https://img.shields.io/crates/d/iso8583_parser?style=flat-square)
+![build workflow](https://github.com/HosseinAssaran/ISO8583-Parser/actions/workflows/rust.yml/badge.svg)
+![release workflow](https://github.com/HosseinAssaran/ISO8583-Parser/actions/workflows/release.yml/badge.svg)
 
 This Rust program gets iso messages in hex string format and it extracts and processes specific fields from an input message.
 
