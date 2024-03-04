@@ -5,7 +5,7 @@
 //! ## Examples
 //!
 //! ```
-//! use iso8583_parser::StringManipulation;
+//! use iso8583_parser::{StringManipulation, Mode};
 //!
 //! let mut s = String::from("48656C6C6F2C576F726C64"); // "Hello, World" in hex
 //!
@@ -21,8 +21,9 @@
 //! let slice = s.get_slice_until(5);
 //! assert_eq!(slice, "C6C6F");
 //! 
+//!let mode_instance = Mode { enabled_private_tlv: false, enabled_private_ltv: false };
 //! // Process a field based on field number, length, and name
-//! s.process_field(1, 12, "test");
+//! s.process_field(1, 12, "test", &mode_instance);
 //!
 //! use iso8583_parser::positions_of_set_bits;
 //!
