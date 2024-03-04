@@ -14,6 +14,14 @@
         <input type="checkbox" name="inlcudeLengthHeader" id="inlcudeLengthHeader"
         <?php if ( isset($_GET['inlcudeLengthHeader']) && $_GET['inlcudeLengthHeader'] == "on") {echo "checked";}?>>
         <br/>
+        <label for="parsePrivateTlv">Parse Private Tlv</label>
+        <input type="checkbox" name="parsePrivateTlv" id="parsePrivateTlv"
+        <?php if ( isset($_GET['parsePrivateTlv']) && $_GET['parsePrivateTlv'] == "on") {echo "checked";}?>>
+        <br/>
+        <label for="parsePrivateLtv">Parse Private Ltv</label>
+        <input type="checkbox" name="parsePrivateLtv" id="parsePrivateLtv"
+        <?php if ( isset($_GET['parsePrivateLtv']) && $_GET['parsePrivateLtv'] == "on") {echo "checked";}?>>
+        <br/>
         <label for="Message">Enter the message:</label>
         <br/>
         <span style="color:Gray">(e.g. '01002000000000000000930000')</span>
@@ -35,6 +43,12 @@
         $parser_arguments = "-m " . $iso_message;
         if(isset($_GET['inlcudeLengthHeader'])) {
             $parser_arguments = "-i " . $parser_arguments;
+        }
+        if(isset($_GET['parsePrivateTlv'])) {
+            $parser_arguments = "-t " . $parser_arguments;
+        }
+        if(isset($_GET['parsePrivateLtv'])) {
+            $parser_arguments = "-l " . $parser_arguments;
         }
         $output = [];
 
