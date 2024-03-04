@@ -2,7 +2,7 @@
 
 This Rust program gets iso messages in hex string format and it extracts and processes specific fields from an input message.
 
-**Important Note:** As the PHP Web server use a rust program to parse the message, you will need it. You can achieve this program by compiling the rust written program from source or you can downlaod the executable file with **iso_parser_downloader**.
+**Important Note:** As the PHP Web server uses a rust program to parse the message, you will need it. You can achieve this program by building release of the rust written program from the source or you can downlaod the executable file with **iso_parser_downloader**.
 ## Usage
 ### Run it as a PHP Web Server
 1. Download the source code and go to the root directory of your source code

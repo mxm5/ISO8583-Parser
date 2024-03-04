@@ -1,4 +1,4 @@
-use iso8583_parser::{StringManipulation, positions_of_set_bits};
+use iso8583_parser::{StringManipulation, positions_of_set_bits, Mode};
 use clap::Parser;
 
 fn read_data_from_stdin()-> String {
@@ -26,6 +26,12 @@ struct Args {
 
     #[arg(short, long)]
     including_header_length: bool,
+
+    #[arg(short, long)]
+    tlv_private: bool,
+
+    #[arg(short, long)]
+    ltv_private: bool,
 }
 
 fn main() {
@@ -55,73 +61,83 @@ fn main() {
         bitmap.retain(|&x| x != 1);
     }
     println!("First Bit Map: {:?}", bitmap);
-
-    for &bit in &bitmap {
+    let mode  = Mode { 
+        enabled_private_tlv: args.tlv_private,
+        enabled_private_ltv: args.ltv_private,
+     };
+        
+     for &bit in &bitmap {
         match bit {
             2 => {
                 let pan_len: u32 =  s.get_slice_until(2).parse::<u32>().unwrap();
-                s.process_field(2, pan_len, "PAN");
+                s.process_field(2, pan_len, "PAN", &mode);
             }
-            3 => s.process_field(3, 6, "Process Code"),
-            4 => s.process_field(4, 12, "Transaction Amount"),
-            5 => s.process_field(5, 12, "Settlement Amount"),
-            6 => s.process_field(6, 12, "Cardholder Billing Amount"),
-            7 => s.process_field(7, 10, "Transaction Date and Time"),
-            11 => s.process_field(11, 6, "Trace"),
-            12 => s.process_field(12, 6, "Time"),
-            13 => s.process_field(13, 4, "Date"),
-            14 => s.process_field(14, 4, "Card EXpiration Date"),
-            18 => s.process_field(18, 4, "Merchant Category Code"),
-            19 => s.process_field(19, 3, "Acquirer Country Code"),
-            22 => s.process_field(22, 4, "POS Entry Mode"),
-            23 => s.process_field(23, 3, "Card Sequence Number"),
-            24 => s.process_field(24, 4, ""),
-            25 => s.process_field(25, 2, ""),
+            3 => s.process_field(3, 6, "Process Code", &mode),
+            4 => s.process_field(4, 12, "Transaction Amount", &mode),
+            5 => s.process_field(5, 12, "Settlement Amount", &mode),
+            6 => s.process_field(6, 12, "Cardholder Billing Amount", &mode),
+            7 => s.process_field(7, 10, "Transaction Date and Time", &mode),
+            9 => s.process_field(9, 8, "Conversion rate, settlement", &mode),
+            10 => s.process_field(10, 8, "Conversion rate, cardholder billing", &mode),
+            11 => s.process_field(11, 6, "Trace", &mode),
+            12 => s.process_field(12, 6, "Time", &mode),
+            13 => s.process_field(13, 4, "Date", &mode),
+            14 => s.process_field(14, 4, "Card EXpiration Date", &mode),
+            18 => s.process_field(18, 4, "Merchant Category Code", &mode),
+            19 => s.process_field(19, 3, "Acquirer Country Code", &mode),
+            22 => s.process_field(22, 4, "POS Entry Mode", &mode),
+            23 => s.process_field(23, 3, "Card Sequence Number", &mode),
+            24 => s.process_field(24, 4, "", &mode),
+            25 => s.process_field(25, 2, "", &mode),
             35 => {
                 let track2_len: u32 = s.get_slice_until(2).parse::<u32>().unwrap();
-                s.process_field(35, track2_len, "Track2");
+                s.process_field(35, track2_len, "Track2", &mode);
             }
-            37 => s.process_field(37, 24, "Retrieval Ref #"),
-            38 => s.process_field(38, 12, "Authorization Code"),
-            39 => s.process_field(39, 4, "Response Code"),
-            41 => s.process_field(41, 16, "Terminal"),
-            42 => s.process_field(42, 30, "Acceptor"),
-            43 => s.process_field(43, 40, "Card Acceptor Name/Location"),
+            37 => s.process_field(37, 24, "Retrieval Ref #", &mode),
+            38 => s.process_field(38, 12, "Authorization Code", &mode),
+            39 => s.process_field(39, 4, "Response Code", &mode),
+            41 => s.process_field(41, 16, "Terminal", &mode),
+            42 => s.process_field(42, 30, "Acceptor", &mode),
+            43 => s.process_field(43, 40, "Card Acceptor Name/Location", &mode),
+            44 => {
+                let field44_len: u32 = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
+                s.process_field(44, field44_len, "Additional response data", &mode);
+            }
             45 => {
                 let track1_len: u32 = s.get_slice_until(2).parse::<u32>().unwrap();
-                s.process_field(45, track1_len, "Track 1 Data");
+                s.process_field(45, track1_len, "Track 1 Data", &mode);
             }
             48 => {
                 let field48_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
-                s.process_field(48, field48_len, "Aditional Data");
+                s.process_field(48, field48_len, "Aditional Data", &mode);
             }
-            49 => s.process_field(49, 6, "Transaction Currency Code"),
-            50 => s.process_field(50, 6, "Settlement Currency Code"),
-            51 => s.process_field(51, 6, "Billing Currency Code"),
-            52 => s.process_field(52, 16, "PinBlock"),
+            49 => s.process_field(49, 6, "Transaction Currency Code", &mode),
+            50 => s.process_field(50, 6, "Settlement Currency Code", &mode),
+            51 => s.process_field(51, 6, "Billing Currency Code", &mode),
+            52 => s.process_field(52, 16, "PinBlock", &mode),
             54 => {
                 let field54_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
-                s.process_field(54, field54_len, "Amount");
+                s.process_field(54, field54_len, "Amount", &mode);
             }
             55 => {
                 let field55_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
-                s.process_field(55, field55_len, "");
+                s.process_field(55, field55_len, "", &mode);
             }
             60 => {
                 let field60_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
-                s.process_field(60, field60_len, "");              
+                s.process_field(60, field60_len, "", &mode);              
             }
             62 => {
                 let field62_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
-                s.process_field(62, field62_len, "IP And Port");
+                s.process_field(62, field62_len, "Private", &mode);
             }
-            64 => s.process_field(64, 16, "MAC"),
-            70 => s.process_field(70, 4, ""),
+            64 => s.process_field(64, 16, "MAC", &mode),
+            70 => s.process_field(70, 4, "", &mode),
             122 => {
                 let field122_len = s.get_slice_until(4).parse::<u32>().unwrap() * 2;
-                s.process_field(122, field122_len, "Additional Data");
+                s.process_field(122, field122_len, "Additional Data", &mode);
             }
-            128 => s.process_field(128, 16, "MAC"),
+            128 => s.process_field(128, 16, "MAC", &mode),
             num => {println!("The number {} is not defined yet.", num); return;},
         }
     }

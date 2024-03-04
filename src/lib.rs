@@ -32,7 +32,7 @@
 //! let mut s = String::from("1101303830303539313535301002322E362E31352E3332020330022231021532"); // LTV format in hex
 //!
 //! // Parse LTV (Length, Tag, Value) format
-//! let ltvs = s.parse_ltv().unwrap();
+//! let ltvs = s.parse_private_ltv().unwrap();
 //!
 //! for ltv in ltvs {
 //!     println!("{}", ltv);
@@ -47,6 +47,16 @@ pub struct  LTV {
     pub length: usize,
     pub tag: u8,
     pub value: String,
+}
+pub struct  PrivateTlv {
+    pub tag: String,
+    pub length: usize,
+    pub value: String,
+}
+
+pub struct Mode {
+    pub enabled_private_tlv: bool,
+    pub enabled_private_ltv: bool,
 }
 
 /// Returns the positions of set bits in a binary number.
@@ -63,10 +73,13 @@ pub trait StringManipulation {
     fn hex_to_ascii(&mut self) -> Result<String, hex::FromHexError>;
 
     /// Process a field based on field number, length, and name.
-    fn process_field(&mut self, field_number: u32, length: u32, name: &str);
+    fn process_field(&mut self, field_number: u32, length: u32, name: &str, mode: &Mode);
 
     /// Parse LTV (Length, Tag, Value) format.
-    fn parse_ltv(&mut self) -> Result<Vec<LTV>, Box<dyn error::Error>>;
+    fn parse_private_ltv(&mut self) -> Result<Vec<LTV>, Box<dyn error::Error>>;
+
+    /// Parse Private TLV format
+    fn parse_private_tlv(&mut self) -> Result<Vec<PrivateTlv>, Box<dyn error::Error>>;
 }
 
 impl StringManipulation for String {
@@ -83,14 +96,14 @@ impl StringManipulation for String {
     }
 
     /// Process a field based on field number, length, and name.
-    fn process_field(&mut self, field_number: u32, length: u32, name: &str) {
+    fn process_field(&mut self, field_number: u32,length: u32,name: &str, mode: &Mode) {
         let mut field_value = if field_number == 35 {
             self.get_slice_until(38 as usize)
         } else {
             self.get_slice_until(length as usize)
         };
 
-        let value_to_print = if matches!(field_number, 37 | 38 | 41 | 42 | 49 | 62 | 122) {
+        let value_to_print = if matches!(field_number, 37 | 38 | 41 | 42 | 44 | 49 | 50 | 51 | 62 | 122) {
             field_value.hex_to_ascii().unwrap()
         } else {
             field_value.to_string()
@@ -104,27 +117,52 @@ impl StringManipulation for String {
                 Err(e) => eprintln!("Error parsing TLV: {}", e),
             }
         }
-        else if field_number == 48 {
-            let mut ltv_value = value_to_print;
-            match ltv_value.parse_ltv() {
-                Ok(ltvs) => ltvs.iter().for_each(|ltv| println!("{}", ltv)),
-                Err(e) => eprintln!("Error parsing LTV: {:?}", e),
+        else if field_number == 48  {
+            if mode.enabled_private_tlv {
+                let mut tlv_private_value = value_to_print;
+                match tlv_private_value.parse_private_tlv() {
+                    Ok(tlvs_p) => tlvs_p.iter().for_each(|tlv_p| println!("{}", tlv_p)),
+                    Err(e) => eprintln!("Error parsing private tlv: {:?}", e),
+                }
+            }
+            else if mode.enabled_private_ltv {
+                let mut ltv_value = value_to_print;
+                match ltv_value.parse_private_ltv() {
+                    Ok(ltvs) => ltvs.iter().for_each(|ltv| println!("{}", ltv)),
+                    Err(e) => eprintln!("Error parsing LTV: {:?}", e),
+                }
             }
         }
     }
 
-    fn parse_ltv(&mut self) -> Result<Vec<LTV>, Box<dyn error::Error>> {
-        let mut ltvs = Vec::new();
-            while self.len() > 0 {
-                let length =  self.drain(..2).collect::<String>().parse::<usize>()?;
-                let tag =  self.drain(..2).collect::<String>().parse::<u8>()?;
-                let byte_length  = (length - 1) * 2;
-                let value = self.drain(..byte_length).collect::<String>();
-                let ltv = LTV { length, tag, value};
-                ltvs.push(ltv);
-            }
-        Ok(ltvs)
+
+    fn parse_private_ltv(&mut self) -> Result<Vec<LTV>, Box<dyn error::Error>> {
+    let mut ltvs = Vec::new();
+        while self.len() > 0 {
+            let length =  self.drain(..2).collect::<String>().parse::<usize>()?;
+            let tag =  self.drain(..2).collect::<String>().parse::<u8>()?;
+            let byte_length  = (length - 1) * 2;
+            let value = self.drain(..byte_length).collect::<String>();
+            let ltv = LTV { length, tag, value};
+            ltvs.push(ltv);
+        }
+    Ok(ltvs)
     }
+
+    fn parse_private_tlv(&mut self) -> Result<Vec<PrivateTlv>, Box<dyn error::Error>> {
+        let mut private_tlvs = Vec::new();
+            while self.len() > 0 {
+                let tag =  self.drain(..4).collect::<String>().hex_to_ascii().unwrap();
+                let length_hex_string =  self.drain(..4).collect::<String>().hex_to_ascii().unwrap();
+                let length = usize::from_str_radix(length_hex_string.as_str(), 16)?;
+                let byte_length  = length * 2;
+                let value = self.drain(..byte_length).collect::<String>().hex_to_ascii().unwrap();
+                let private_tlv = PrivateTlv { tag, length, value};
+                private_tlvs.push(private_tlv);
+            }
+        Ok(private_tlvs)
+    }
+
 }
 
 use std::fmt;
@@ -145,6 +183,18 @@ impl fmt::Display for LTV {
     }
 }
 
+impl fmt::Display for PrivateTlv {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "\tTag: {:3} | Len: {:3} | Val: {}",
+            self.tag,
+            self.length,
+            self.value,
+        )
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -152,7 +202,7 @@ mod tests {
     #[test]
     fn test_parse_ltv_single() {
         let mut s = String::from("061148656C6C6F");
-        let mut ltvs = s.parse_ltv().unwrap();
+        let mut ltvs = s.parse_private_ltv().unwrap();
 
         assert_eq!(ltvs.len(), 1);
 
@@ -165,7 +215,7 @@ mod tests {
     #[test]
     fn test_parse_ltv_multiple() {
         let mut s = String::from("031148690622576F726C64");
-        let mut ltvs = s.parse_ltv().unwrap();
+        let mut ltvs = s.parse_private_ltv().unwrap();
 
         assert_eq!(ltvs.len(), 2);
 
@@ -183,7 +233,7 @@ mod tests {
     #[test]
     fn test_parse_ltv_empty() {
         let mut s = String::new();
-        let ltvs = s.parse_ltv();
+        let ltvs = s.parse_private_ltv();
 
         assert!(ltvs.is_ok());
         assert!(ltvs.unwrap().is_empty());
@@ -192,7 +242,7 @@ mod tests {
     #[test]
     fn error_test() {
         let mut s = String::from("T31148690622576F726C64");
-        let ltvs = s.parse_ltv();
+        let ltvs = s.parse_private_ltv();
         assert!(ltvs.is_err());
         assert_eq!(ltvs.err().unwrap().to_string().as_str(), "invalid digit found in string");
     }
